@@ -1,0 +1,140 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { View, FlatList, Text, TextInput, TouchableOpacity, Image } from 'react-native';
+import { Ionicons, MaterialIcons } from 'react-native-vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import Animated from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+
+const ChatScreen = () => {
+  const [messages, setMessages] = useState([]);
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const flatListRef = useRef();
+
+  const navigation = useNavigation();
+
+  // Example messages
+  const exampleMessages = [
+    {
+      id: '1',
+      text: 'Hey, how are you?',
+      sender: 'user',
+      timestamp: '10:30 AM',
+      status: 'seen',
+    },
+    {
+      id: '2',
+      text: 'I am good, thanks for asking!',
+      sender: 'me',
+      timestamp: '10:31 AM',
+      status: 'sent',
+    },
+  ];
+
+  useEffect(() => {
+    setMessages(exampleMessages);
+  }, []);
+
+  const handleSendMessage = () => {
+    if (message.trim()) {
+      setLoading(true);
+      setMessages([...messages, {
+        id: Date.now().toString(),
+        text: message,
+        sender: 'me',
+        timestamp: new Date().toLocaleTimeString(),
+        status: 'sent',
+      }]);
+      setMessage('');
+      setLoading(false);
+      setTimeout(() => {
+        setMessages(prevMessages =>
+          prevMessages.map(msg => msg.id === message.id ? { ...msg, status: 'seen' } : msg)
+        );
+      }, 3000);
+    }
+  };
+
+  const renderMessage = ({ item }) => {
+    const messageStatusIcon = item.status === 'sent' ? 'clock' : item.status === 'seen' ? 'checkmark' : 'error';
+    return (
+      <View style={{ flexDirection: item.sender === 'me' ? 'row-reverse' : 'row', marginVertical: 5 }}>
+        <View style={{ backgroundColor: item.sender === 'me' ? '#0084ff' : '#e4e6eb', padding: 10, borderRadius: 15, maxWidth: '80%' }}>
+          <Text style={{ color: item.sender === 'me' ? 'white' : 'black', fontSize: 16 }}>{item.text}</Text>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 5 }}>
+            <Text style={{ color: 'gray', fontSize: 12 }}>{item.timestamp}</Text>
+            <MaterialIcons name={messageStatusIcon} size={16} color="gray" />
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const scrollToBottom = () => {
+    flatListRef.current.scrollToEnd({ animated: true });
+  };
+
+  const handleFileUpload = () => {
+    // Handle file upload logic here
+  };
+
+  const handleVoiceMessage = () => {
+    // Handle voice message recording here
+  };
+
+  const Header = () => {
+    return (
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', padding: 10, backgroundColor: '#fff' }}>
+        <TouchableOpacity onPress={() => navigation.navigate('CallScreen')}>
+          <Ionicons name="call" size={24} color="#000" />
+        </TouchableOpacity>
+        <Text style={{ fontSize: 18, fontWeight: 'bold' }}>Chat</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('InfoScreen')}>
+          <Ionicons name="information-circle-outline" size={24} color="#000" />
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: '#f2f2f2' }}>
+        <Header />
+        <FlatList
+          ref={flatListRef}
+          data={messages}
+          renderItem={renderMessage}
+          keyExtractor={item => item.id}
+          inverted
+          onContentSizeChange={() => scrollToBottom()}
+        />
+        <View style={{ flexDirection: 'row', padding: 10, backgroundColor: '#fff' }}>
+          <TouchableOpacity onPress={handleFileUpload}>
+            <Ionicons name="ios-attach" size={24} color="#007aff" />
+          </TouchableOpacity>
+          <TextInput
+            value={message}
+            onChangeText={setMessage}
+            placeholder="Type a message"
+            style={{
+              flex: 1,
+              marginHorizontal: 10,
+              paddingHorizontal: 10,
+              paddingVertical: 8,
+              borderRadius: 25,
+              backgroundColor: '#f1f1f1',
+            }}
+          />
+          <TouchableOpacity onPress={handleVoiceMessage}>
+            <Ionicons name="mic" size={24} color="#007aff" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleSendMessage}>
+            <Ionicons name="send" size={24} color="#007aff" />
+          </TouchableOpacity>
+        </View>
+      </View>
+    </GestureHandlerRootView>
+  );
+};
+
+export default ChatScreen;
